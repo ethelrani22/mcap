@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{common/layout :: layout(~{::title}, ~{::#content})}">
+<head>
+    <title th:text="'Verification Dashboard - ' + ${instituteName}">Verification Dashboard</title>
+</head>
+<body>
+<div id="content">
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/bootstrap-icons/bootstrap-icons.css}">
+    <link rel="stylesheet" th:href="@{/css/institute/verification-allotment.css}">
+
+    <header class="d-flex justify-content-between align-items-center pt-3 pb-3 mb-4 border-bottom">
+        <div>
+            <h1 class="h3 fw-bold text-primary mb-0">Verification Dashboard</h1>
+            <small class="text-muted">Institute: <span th:text="${instituteName}">Institute Name</span></small>
+        </div>
+    </header>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card stats-card card-gradient-pending shadow-sm h-100" data-tab-id="tab-pending-btn">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="fw-bold text-uppercase mb-1 small opacity-75">Pending Reviews</h6>
+                        <h2 class="mb-0 fw-bold display-6" id="stats-pending">0</h2>
+                    </div>
+                    <i class="bi bi-hourglass-split fs-1"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card stats-card card-gradient-verified shadow-sm h-100" data-tab-id="tab-verified-btn">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="fw-bold text-uppercase mb-1 small opacity-75">Verified Candidates</h6>
+                        <h2 class="mb-0 fw-bold display-6" id="stats-verified">0</h2>
+                    </div>
+                    <i class="bi bi-patch-check-fill fs-1"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card stats-card card-gradient-rejected shadow-sm h-100" data-tab-id="tab-rejected-btn">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="fw-bold text-uppercase mb-1 small opacity-75">Rejected Candidates</h6>
+                        <h2 class="mb-0 fw-bold display-6" id="stats-rejected">0</h2>
+                    </div>
+                    <i class="bi bi-x-octagon-fill fs-1"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-5">
+            <label for="programmeFilter" class="form-label fw-bold text-muted small mb-1"><i class="bi bi-funnel-fill me-1"></i>Filter by Programme</label>
+            <select id="programmeFilter" class="form-select border-primary shadow-sm">
+                <option value="">All Programmes</option>
+                <option th:each="prog : ${instituteProgrammes}"
+                        th:value="${prog.programmeId}"
+                        th:text="${prog.programmeName}"></option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="shiftFilter" class="form-label fw-bold text-muted small mb-1"><i class="bi bi-clock-fill me-1"></i>Filter by Shift</label>
+            <select id="shiftFilter" class="form-select border-primary shadow-sm">
+                <option value="">All Shifts</option>
+                <option value="MORNING">Morning</option>
+                <option value="DAY">Day</option>
+                <option value="EVENING">Evening</option>
+                <option value="NIGHT">Night</option>
+                <option value="NA">Not Applicable</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="routeFilter" class="form-label fw-bold text-muted small mb-1"><i class="bi bi-signpost-split-fill me-1"></i>Admission Route</label>
+            <select id="routeFilter" class="form-select border-primary shadow-sm">
+                <option value="">All Routes</option>
+                <option value="CUET">CUET</option>
+                <option value="NONCUET">Non-CUET</option>
+            </select>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" id="verificationTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active fw-bold" id="tab-pending-btn" data-bs-toggle="tab" data-bs-target="#tab-pending" type="button">Pending</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold" id="tab-verified-btn" data-bs-toggle="tab" data-bs-target="#tab-verified" type="button">Verified</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold" id="tab-rejected-btn" data-bs-toggle="tab" data-bs-target="#tab-rejected" type="button">Rejected</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="verification-tab-content">
+
+        <div class="tab-pane fade show active" id="tab-pending" role="tabpanel">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-uppercase x-small text-muted">
+                            <tr>
+                                <th>#</th>
+                                <th>Applicant</th>
+                                <th>Details</th>
+                                <th>Category</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="pending-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="pending-pagination"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-verified" role="tabpanel">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-uppercase x-small text-muted">
+                            <tr>
+                                <th>Applicant</th>
+                                <th>Programme</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th class="text-center">Docs</th>
+                            </tr>
+                            </thead>
+                            <tbody id="verified-table-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="verified-pagination"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-rejected" role="tabpanel">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-uppercase x-small text-muted">
+                            <tr>
+                                <th>Applicant</th>
+                                <th>Programme</th>
+                                <th>Reason</th>
+                                <th class="text-center">Docs</th>
+                            </tr>
+                            </thead>
+                            <tbody id="rejected-table-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="rejected-pagination"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="rejectionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-x-octagon-fill me-2"></i>Reject Allotment</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Confirm rejection for: <strong id="reject-applicant-name"></strong></p>
+                    <div class="mb-3">
+                        <label for="rejectionRemarks" class="form-label">Reason for Rejection</label>
+                        <textarea class="form-control" id="rejectionRemarks" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirm-rejection-btn">Confirm Rejection</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="verificationConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="bi bi-check-circle-fill me-2"></i>Verify Applicant?</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Approve documents for: <strong id="verify-applicant-name"></strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="confirm-verify-btn">Yes, Verify</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="documentReviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Documents - <span id="review-applicant-name"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="documentReviewBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editApplicantModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Edit Applicant - <span id="edit-applicant-name"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <ul class="nav nav-tabs px-3 pt-2" id="editTabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="edit-tab-personal-btn" data-bs-toggle="tab" data-bs-target="#edit-tab-personal" type="button">Personal</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="edit-tab-academic-btn" data-bs-toggle="tab" data-bs-target="#edit-tab-academic" type="button">Academic</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="edit-tab-entrance-btn" data-bs-toggle="tab" data-bs-target="#edit-tab-entrance" type="button">Entrance</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="edit-tab-documents-btn" data-bs-toggle="tab" data-bs-target="#edit-tab-documents" type="button">Documents</button>
+                    </li>
+                </ul>
+                <div class="modal-body">
+                    <div id="edit-loading" class="text-center py-5"><div class="spinner-border"></div></div>
+                    <div class="tab-content d-none" id="edit-tab-content">
+                        <div class="tab-pane fade show active" id="edit-tab-personal" role="tabpanel">
+                            <form id="edit-personal-form" class="row g-3">
+                                <div class="col-md-4"><label class="form-label small">First Name</label>
+                                    <input type="text" class="form-control" name="firstName" required></div>
+                                <div class="col-md-4"><label class="form-label small">Middle Name</label>
+                                    <input type="text" class="form-control" name="middleName"></div>
+                                <div class="col-md-4"><label class="form-label small">Last Name</label>
+                                    <input type="text" class="form-control" name="lastName" required></div>
+                                <div class="col-md-4"><label class="form-label small">Date of Birth</label>
+                                    <input type="date" class="form-control" name="dateOfBirth" required></div>
+                                <div class="col-md-4"><label class="form-label small">Phone Number</label>
+                                    <input type="text" class="form-control" name="phoneNumber" required></div>
+                                <div class="col-md-4"><label class="form-label small">Email</label>
+                                    <input type="email" class="form-control" name="email" required></div>
+                                <div class="col-md-4"><label class="form-label small">Father's Name</label>
+                                    <input type="text" class="form-control" name="fatherName"></div>
+                                <div class="col-md-4"><label class="form-label small">Mother's Name</label>
+                                    <input type="text" class="form-control" name="motherName"></div>
+                                <div class="col-md-4"><label class="form-label small">Guardian's Name</label>
+                                    <input type="text" class="form-control" name="guardianName"></div>
+                                <hr class="mt-3">
+                                <h6 class="fw-bold text-muted">Permanent Address</h6>
+                                <div class="col-md-6"><label class="form-label small">Address Line 1</label>
+                                    <input type="text" class="form-control" name="permAddressLine1"></div>
+                                <div class="col-md-6"><label class="form-label small">Address Line 2</label>
+                                    <input type="text" class="form-control" name="permAddressLine2"></div>
+                                <div class="col-md-4"><label class="form-label small">Town/Village</label>
+                                    <input type="text" class="form-control" name="permTownVillage"></div>
+                                <div class="col-md-4"><label class="form-label small">Pincode</label>
+                                    <input type="text" class="form-control" name="permPincode"></div>
+                            </form>
+                        </div>
+                        <div class="tab-pane fade" id="edit-tab-academic" role="tabpanel">
+                            <div id="academic-records-container"></div>
+                        </div>
+                        <div class="tab-pane fade" id="edit-tab-entrance" role="tabpanel">
+                            <div id="entrance-scores-container">
+                                <p class="text-muted small">Loading entrance scores...</p>
+                            </div>
+                        </div>
+                        <!-- Documents Tab: shows all existing docs as cards with a Replace button each -->
+                        <div class="tab-pane fade" id="edit-tab-documents" role="tabpanel">
+                            <div id="doc-tab-loading" class="text-center py-4">
+                                <div class="spinner-border spinner-border-sm text-primary"></div>
+                                <p class="text-muted small mt-2">Loading documents...</p>
+                            </div>
+                            <div id="doc-tab-content" class="d-none">
+                                <p class="text-muted small mb-3">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Click <strong>Replace</strong> on any document to upload a new copy. The old file will be overwritten in the database.
+                                </p>
+                                <div id="doc-list-container" class="row g-3"></div>
+                            </div>
+                            <div id="doc-tab-error" class="d-none alert alert-danger small"></div>
+                            <!-- Inline replace panel (reused for all docs) -->
+                            <div id="doc-replace-panel" class="d-none border rounded p-3 mt-3 bg-light">
+                                <h6 class="fw-bold mb-2" id="doc-replace-title">Replace Document</h6>
+                                <form id="doc-replace-form" class="row g-2 align-items-end">
+                                    <input type="hidden" id="doc-replace-type" name="documentType">
+                                    <div class="col-md-8">
+                                        <label class="form-label small">New File (PDF / Image)</label>
+                                        <input type="file" class="form-control form-control-sm" id="doc-replace-file"
+                                               name="documentFile" accept=".pdf,.jpg,.jpeg,.png" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="submit" class="btn btn-sm btn-primary w-100">
+                                            <i class="bi bi-upload me-1"></i>Save
+                                        </button>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-sm btn-secondary w-100" id="doc-replace-cancel">Cancel</button>
+                                    </div>
+                                </form>
+                                <div id="doc-replace-status" class="mt-2 small"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="save-personal-btn">Save Personal Details</button>
+                    <button type="button" class="btn btn-primary d-none" id="save-academic-btn">Save Academic Details</button>
+                    <button type="button" class="btn btn-primary d-none" id="save-entrance-btn">Save Entrance Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="historyOffcanvas" aria-labelledby="historyOffcanvasLabel" style="width: 480px;">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title" id="historyOffcanvasLabel"><i class="bi bi-clock-history me-2"></i>History - <span id="history-applicant-name"></span></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <p class="text-muted small">Verification decisions and detail edits by every institute across all counseling rounds, newest first.</p>
+            <div id="history-loading" class="text-center py-4 d-none"><div class="spinner-border spinner-border-sm"></div></div>
+            <div id="history-empty" class="text-center text-muted small py-4 d-none">No history yet for this applicant.</div>
+            <div id="history-timeline" class="d-flex flex-column gap-3"></div>
+        </div>
+    </div>
+
+    <div class="modal fade viewer-modal-z" id="documentViewerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-dark text-white py-2">
+                    <h6 class="modal-title" id="viewer-filename">Viewer</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0 bg-secondary bg-opacity-10 viewer-body-height">
+                    <div id="image-viewer-container" class="h-100 w-100 d-none text-center p-3">
+                        <img src="" id="full-res-image" class="img-fluid viewer-img-fit">
+                    </div>
+                    <iframe id="pdf-viewer-frame" class="h-100 w-100 d-none border-0" src=""></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/axios.min.js"></script>
+    <script th:src="@{/js/institute/verification.js}"></script>
+
+</div>
+</body>
+</html>

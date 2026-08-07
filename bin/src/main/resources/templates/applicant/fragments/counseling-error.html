@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Counseling Unavailable</title>
+</head>
+<body>
+
+<!--
+  Fragment: counseling-error
+  Used by: ApplicantPageController#getSeatAllotmentResultFragment
+  Rendered when:
+    1. No application exists for the requested admission window (ownership check)
+    2. Payment is not yet complete (payment guard)
+-->
+<div th:fragment="counseling-error"
+     class="container py-5">
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center p-5">
+
+                    <!-- Icon -->
+                    <div class="mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="56" height="56" fill="none"
+                             viewBox="0 0 24 24" stroke="currentColor"
+                             stroke-width="1.5"
+                             class="text-warning"
+                             style="color: #f59e0b;">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374
+                                     1.948 3.374h14.71c1.73 0 2.813-1.874
+                                     1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898
+                                     0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                        </svg>
+                    </div>
+
+                    <!-- Heading -->
+                    <h4 class="fw-semibold mb-3" style="color: #1e293b;">Seat Allotment Unavailable</h4>
+
+                    <!-- Dynamic message from controller -->
+                    <p class="text-muted mb-4"
+                       th:text="${errorMessage} ?: 'Seat allotment information could not be retrieved at this time. Please ensure all application steps are complete before accessing this section.'">
+                        Seat allotment information could not be retrieved at this time.
+                    </p>
+
+                    <!-- Back to dashboard button -->
+                    <a href="/applicants/dashboard"
+                       class="btn btn-primary px-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                             fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                             stroke-width="2" class="me-2"
+                             style="vertical-align: -2px;">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                        </svg>
+                        Back to Dashboard
+                    </a>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

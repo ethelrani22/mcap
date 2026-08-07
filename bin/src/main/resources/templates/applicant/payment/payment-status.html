@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+    <title>Payment Status</title>
+
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/bootstrap-icons/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/css/applicant/payment.css}">
+
+    <script defer src="/js/applicant/payment-status.js"></script>
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+
+                    <!-- ✅ SUCCESS -->
+                    <div th:if="${status == 'PAID' or status == 'SUCCESS' or status == 'PAYMENT_SUCCESS'}" class="mb-4 text-success">
+                        <i class="bi bi-check-circle-fill payment-status-icon"></i>
+                        <h2 class="mt-3 fw-bold">Payment Successful!</h2>
+                        <p class="text-muted">Your transaction has been processed successfully.</p>
+                    </div>
+
+                    <!-- ⏳ PENDING / AUTHORIZED — payment in-flight, webhook hasn't arrived yet -->
+                    <div th:if="${status == 'PENDING' or status == 'AUTHORIZED'}" class="mb-4 text-warning">
+                        <i class="bi bi-hourglass-split payment-status-icon"></i>
+                        <h2 class="mt-3 fw-bold">Payment Processing</h2>
+                        <p class="text-muted">Your payment is being confirmed by your bank. This usually takes a few seconds.<br/>
+                            <strong>Do not close this tab or press Back.</strong> This page will refresh automatically.</p>
+                        <!-- Auto-refresh every 5 seconds until a terminal status is reached -->
+                        <meta http-equiv="refresh" content="5">
+                    </div>
+
+                    <!-- ❌ FAILED -->
+                    <div th:if="${status == 'PAYMENT_FAILED'}" class="mb-4 text-danger">
+                        <i class="bi bi-x-circle-fill payment-status-icon"></i>
+                        <h2 class="mt-3 fw-bold">Payment Failed</h2>
+                        <p class="text-muted">Your payment could not be completed. No amount has been deducted.<br/>
+                            Please go back and try again, or use a different payment method.</p>
+                    </div>
+
+                    <!-- 💸 REFUND INITIATED -->
+                    <div th:if="${status == 'REFUND_INITIATED'}" class="mb-4 text-info">
+                        <i class="bi bi-arrow-counterclockwise payment-status-icon"></i>
+                        <h2 class="mt-3 fw-bold">Refund Initiated</h2>
+                        <p class="text-muted">A refund has been initiated for this payment. It will be credited to your account within 5–7 business days.</p>
+                    </div>
+
+                    <!-- ✅ REFUNDED -->
+                    <div th:if="${status == 'REFUNDED'}" class="mb-4 text-success">
+                        <i class="bi bi-cash-coin payment-status-icon"></i>
+                        <h2 class="mt-3 fw-bold">Refund Processed</h2>
+                        <p class="text-muted">Your refund has been successfully credited to your original payment method.</p>
+                    </div>
+
+                    <!-- ⚠️ REFUND FAILED -->
+                    <div th:if="${status == 'REFUND_FAILED'}" class="mb-4 text-danger">
+                        <i class="bi bi-exclamation-triangle-fill payment-status-icon"></i>
+                        <h2 class="mt-3 fw-bold">Refund Failed</h2>
+                        <p class="text-muted">There was an issue processing your refund. Please contact support with your Order ID and we will resolve this manually.</p>
+                    </div>
+
+                    <!-- ⚠️ DISPUTED -->
+                    <div th:if="${status == 'DISPUTED'}" class="mb-4 text-warning">
+                        <i class="bi bi-shield-exclamation payment-status-icon"></i>
+                        <h2 class="mt-3 fw-bold">Payment Under Review</h2>
+                        <p class="text-muted">This payment has been flagged for review. Please contact support for assistance.</p>
+                    </div>
+
+                    <!-- ❌ CHARGEBACK LOST -->
+                    <div th:if="${status == 'CHARGEBACK_LOST'}" class="mb-4 text-danger">
+                        <i class="bi bi-slash-circle-fill payment-status-icon"></i>
+                        <h2 class="mt-3 fw-bold">Payment Reversed</h2>
+                        <p class="text-muted">This payment has been reversed. Please contact support to resolve your application status.</p>
+                    </div>
+
+                    <!-- ❓ UNKNOWN / FALLBACK -->
+                    <div th:if="${status == 'UNKNOWN' or (status != 'PAID' and status != 'SUCCESS' and status != 'PAYMENT_SUCCESS' and status != 'PENDING' and status != 'AUTHORIZED' and status != 'PAYMENT_FAILED' and status != 'REFUND_INITIATED' and status != 'REFUNDED' and status != 'REFUND_FAILED' and status != 'DISPUTED' and status != 'CHARGEBACK_LOST')}" class="mb-4 text-secondary">
+                        <i class="bi bi-question-circle-fill payment-status-icon"></i>
+                        <h2 class="mt-3 fw-bold">Status Unknown</h2>
+                        <p class="text-muted">We could not determine the status of this payment. Please contact support with your Order ID below.</p>
+                    </div>
+
+                    <!-- Order details (shown for all statuses) -->
+                    <ul class="list-group list-group-flush text-start mb-4">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Order ID:</span>
+                            <strong id="orderId" th:text="${orderId}"></strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Status:</span>
+                            <strong id="statusText" th:text="${status}"></strong>
+                        </li>
+                    </ul>
+
+                    <!-- Action buttons vary by status -->
+                    <div th:if="${status == 'PAID' or status == 'SUCCESS' or status == 'PAYMENT_SUCCESS'}">
+                        <a th:href="@{/applicants/dashboard}" class="btn btn-success px-4">
+                            <i class="bi bi-house-door me-2"></i>Go to Dashboard
+                        </a>
+                    </div>
+
+                    <div th:if="${status == 'PAYMENT_FAILED'}">
+                        <a th:href="@{/applicants/dashboard}" class="btn btn-primary px-4">
+                            <i class="bi bi-arrow-repeat me-2"></i>Try Again
+                        </a>
+                    </div>
+
+                    <div th:if="${status != 'PAID' and status != 'SUCCESS' and status != 'PAYMENT_SUCCESS' and status != 'PAYMENT_FAILED' and status != 'PENDING' and status != 'AUTHORIZED'}">
+                        <a th:href="@{/applicants/dashboard}" class="btn btn-secondary px-4">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="error-message">
+    <div class="alert alert-danger border-danger border-2 m-3" role="alert">
+        <h5 class="alert-heading fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Unable to Load</h5>
+        <p class="mb-0" th:text="${errorMessage} ?: 'Something went wrong. Please try again.'">Something went wrong. Please try again.</p>
+    </div>
+</div>
+</html>

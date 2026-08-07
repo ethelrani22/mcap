@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{common/layout :: layout(~{::title}, ~{::main})}">
+
+<head>
+    <title>Applicants</title>
+</head>
+
+<body>
+<main th:attr="data-programme-offered-id=${programmeOfferedId}">
+    <div class="container-fluid px-4 py-4">
+
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle me-2"></i>
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <nav aria-label="breadcrumb" th:if="${programmeOfferedId != null}">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/institute/view-applications">Programmes</a></li>
+                <li class="breadcrumb-item active" aria-current="page" th:text="${programmeName}"></li>
+            </ol>
+        </nav>
+
+        <div class="card shadow-sm" th:if="${programmeOfferedId != null}">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-people-fill me-2"></i>
+                    <span th:text="${programmeName}"></span>
+                    <span class="badge bg-light text-dark ms-2" th:text="${shiftName}"></span>
+                </h5>
+            </div>
+
+            <div class="card-body">
+                <div id="applicants-loading" class="text-center text-muted py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 mb-0">Loading applicants&hellip;</p>
+                </div>
+
+                <div id="applicants-error" class="alert alert-danger d-none"></div>
+                <div id="applicants-empty" class="alert alert-info d-none">
+                    No accepted applicants for this programme yet.
+                </div>
+
+                <div class="table-responsive d-none" id="applicants-table-wrap">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-dark">
+                        <tr>
+                            <th>Application No.</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Round / Phase</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="applicants-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= VIEW DETAILS MODAL (Personal + Academic, read-only) ================= -->
+    <div class="modal fade" id="details-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Applicant Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs mb-3" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#details-personal-pane" type="button">Personal</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#details-academic-pane" type="button">Academic</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="details-personal-pane">
+                            <div id="details-personal-loading" class="text-center text-muted py-4">
+                                <div class="spinner-border spinner-border-sm text-primary"></div> Loading&hellip;
+                            </div>
+                            <table class="table table-sm table-borderless mb-0 d-none" id="details-personal-table">
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="tab-pane fade" id="details-academic-pane">
+                            <div id="details-academic-loading" class="text-center text-muted py-4">
+                                <div class="spinner-border spinner-border-sm text-primary"></div> Loading&hellip;
+                            </div>
+                            <div id="details-academic-content" class="d-none"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= VIEW APPLICATION MODAL (PDF, view + download) ================= -->
+    <div class="modal fade" id="application-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Application Form</h5>
+                    <a id="application-download-link" class="btn btn-sm btn-outline-primary me-2" target="_blank">
+                        <i class="bi bi-download me-1"></i>Download
+                    </a>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0" style="height:80vh;">
+                    <iframe id="application-pdf-frame" class="w-100 h-100 border-0" src=""></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= VIEW DOCUMENTS MODAL (read-only, reuses institute document-review fragment) ================= -->
+    <div class="modal fade" id="documents-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Documents</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="documents-loading" class="text-center text-muted py-4">
+                        <div class="spinner-border spinner-border-sm text-primary"></div> Loading&hellip;
+                    </div>
+                    <div id="documents-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full-resolution document viewer, reused by the document-review fragment's clickable previews -->
+    <div class="modal fade" id="doc-viewer-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-dark">
+                <div class="modal-header border-0">
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-0">
+                    <img src="" id="doc-viewer-image" class="img-fluid d-none" style="max-height:75vh;">
+                    <iframe id="doc-viewer-pdf" class="w-100 border-0 d-none" style="height:75vh;" src=""></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/axios.min.js"></script>
+    <script th:src="@{/js/institute/programme-applicants.js}"></script>
+</main>
+</body>
+</html>
